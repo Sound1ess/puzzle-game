@@ -1,0 +1,1898 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark" data-skin="default">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Пазлы 2 · Мозаика</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;height:100%;overflow:hidden}
+body{
+  font-family:'Segoe UI',system-ui,-apple-system,Roboto,Arial,sans-serif;
+  background:var(--bg);color:var(--text);
+  user-select:none;-webkit-user-select:none;
+  transition:background .3s,color .3s;
+}
+
+/* ===== ТЕМЫ ===== */
+[data-theme="dark"]  {--bg:#0f1220;--bg2:#171b2e;--card:#1a1f33;--line:#2a3150;--text:#eef1f8;--muted:#8b93b0;--accent:#3a5bd9;--accent2:#4fc3f7;--good:#3fd07a;--bad:#ff5d6c;--gold:#ffd166}
+[data-theme="light"] {--bg:#eef1f8;--bg2:#ffffff;--card:#ffffff;--line:#dfe4f0;--text:#17203a;--muted:#6b7592;--accent:#3a5bd9;--accent2:#7c4dff;--good:#22a05a;--bad:#e03131;--gold:#e8a60c}
+[data-theme="ocean"] {--bg:#04202f;--bg2:#0a3346;--card:#0b3a50;--line:#12546f;--text:#e6fbff;--muted:#79b4c7;--accent:#00b4d8;--accent2:#48cae4;--good:#48e0a0;--bad:#ff6b81;--gold:#ffd166}
+[data-theme="forest"]{--bg:#0d1f17;--bg2:#173326;--card:#173326;--line:#255139;--text:#eafff0;--muted:#86b392;--accent:#3f9d4a;--accent2:#a4d65e;--good:#7bd88f;--bad:#ff7b7b;--gold:#ffd166}
+[data-theme="candy"] {--bg:#26113a;--bg2:#3a1c56;--card:#3a1c56;--line:#5c2f85;--text:#ffeaf7;--muted:#c79ad6;--accent:#ff4d94;--accent2:#ffd166;--good:#7be0c0;--bad:#ff6b81;--gold:#ffd166}
+[data-theme="sunset"]{--bg:#2b1224;--bg2:#4a1f38;--card:#4a1f38;--line:#7a3355;--text:#ffeedd;--muted:#d79fb0;--accent:#ff7b54;--accent2:#ffd166;--good:#8fd694;--bad:#ff5d6c;--gold:#ffd166}
+[data-theme="mono"]  {--bg:#111111;--bg2:#1c1c1c;--card:#1c1c1c;--line:#333333;--text:#f2f2f2;--muted:#8c8c8c;--accent:#9aa0a6;--accent2:#c9ccd1;--good:#b7e4c7;--bad:#f2a6a6;--gold:#e6d5a8}
+
+#app{position:fixed;inset:0}
+.screen{position:absolute;inset:0;display:none;flex-direction:column;padding:14px;
+  padding-top:max(14px,env(safe-area-inset-top));
+  padding-bottom:max(14px,env(safe-area-inset-bottom));}
+.screen.active{display:flex;animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+h1,h2,h3{margin:0}
+.muted{color:var(--muted)}
+
+/* ===== ЗАГРУЗКА ===== */
+#screen-loading{align-items:center;justify-content:center;gap:16px;text-align:center}
+.logo{width:110px;height:110px;border-radius:26px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:flex;align-items:center;justify-content:center;font-size:52px;
+  box-shadow:0 16px 40px rgba(0,0,0,.4);animation:pulse 1.6s infinite ease-in-out}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+#screen-loading h1{font-size:30px;letter-spacing:.5px}
+#loadSub{color:var(--muted)}
+
+/* ===== ТОПБАР ===== */
+.topbar{display:flex;align-items:center;gap:10px}
+.topbar .grow{flex:1}
+.icon-btn{width:42px;height:42px;border-radius:12px;border:1px solid var(--line);
+  background:var(--card);color:var(--text);font-size:20px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:.15s}
+.icon-btn:active{transform:scale(.94)}
+.pill{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--line);
+  border-radius:999px;padding:7px 13px;font-weight:700;font-size:14px}
+.pill .c{color:var(--gold)}
+
+/* ===== КНОПКИ ===== */
+.btn{border:none;border-radius:14px;padding:15px 18px;font-size:16px;font-weight:700;
+  cursor:pointer;background:var(--card);color:var(--text);border:1px solid var(--line);
+  transition:.15s;display:flex;align-items:center;justify-content:center;gap:10px}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;
+  box-shadow:0 10px 24px rgba(0,0,0,.28)}
+.btn.gold{background:linear-gradient(135deg,#ffb03a,#ffd166);color:#3a2600;border:none}
+.btn.small{padding:10px 14px;font-size:14px;border-radius:11px}
+.btn.block{width:100%}
+
+/* ===== СПИСКИ/КАРТОЧКИ ===== */
+.scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;
+  padding:6px 2px 20px;display:flex;flex-direction:column;gap:12px}
+.page-title{font-size:22px;font-weight:800;margin:6px 0 4px}
+
+.mode-card{display:flex;align-items:center;gap:14px;padding:15px;border-radius:16px;
+  background:var(--card);border:1px solid var(--line);cursor:pointer;transition:.15s}
+.mode-card:active{transform:scale(.985)}
+.mode-card.selected{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset}
+.mode-ic{width:48px;height:48px;border-radius:13px;display:flex;align-items:center;justify-content:center;
+  font-size:24px;background:linear-gradient(135deg,var(--accent),var(--accent2));flex:none}
+.mode-tx{flex:1;min-width:0}
+.mode-tx h3{font-size:16px}
+.mode-tx p{margin:3px 0 0;font-size:12.5px;color:var(--muted);line-height:1.35}
+
+.level-card{display:flex;gap:12px;align-items:center;padding:10px;border-radius:16px;
+  background:var(--card);border:1px solid var(--line);cursor:pointer;transition:.15s}
+.level-card.selected{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset}
+.level-thumb{width:74px;height:74px;border-radius:12px;object-fit:cover;flex:none;background:#000}
+.level-meta h3{font-size:16px}
+.level-meta p{margin:4px 0 0;font-size:12.5px;color:var(--muted)}
+
+.chips{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.chip{padding:11px 4px;border-radius:13px;text-align:center;background:var(--card);
+  border:1px solid var(--line);cursor:pointer;font-weight:800;font-size:15px;transition:.15s}
+.chip.selected{border-color:var(--accent);background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+.chip small{font-size:10.5px;font-weight:600;opacity:.75}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px}
+.card h2{font-size:16px;margin-bottom:8px}
+.stat-row{display:flex;justify-content:space-between;padding:6px 0;font-size:14px;color:var(--muted)}
+.stat-row b{color:var(--text)}
+
+/* ===== ИГРА ===== */
+#screen-game{padding:10px}
+.boardWrap{flex:1;display:flex;align-items:center;justify-content:center;position:relative;min-height:0}
+.board{display:grid;gap:2px;background:
+  repeating-linear-gradient(45deg,rgba(0,0,0,.25),rgba(0,0,0,.25) 4px,transparent 4px,transparent 8px);
+  border-radius:10px;padding:2px;touch-action:manipulation}
+.tile{background-repeat:no-repeat;cursor:pointer;transition:transform .08s,box-shadow .12s;
+  position:relative;border-radius:3px}
+.tile:active{transform:scale(.96)}
+.tile.selected{outline:3px solid var(--accent2);outline-offset:-2px;z-index:2;
+  box-shadow:0 0 14px var(--accent2)}
+.board[data-skin="gold"]  .tile{box-shadow:inset 0 0 0 2px rgba(255,209,102,.85)}
+.board[data-skin="gold"]  .tile.selected{box-shadow:0 0 16px #ffd166}
+.board[data-skin="glass"] .tile{box-shadow:inset 0 0 0 2px rgba(255,255,255,.5)}
+.board[data-skin="neon"]  .tile{box-shadow:inset 0 0 0 2px #4fc3f7,0 0 8px rgba(79,195,247,.5)}
+.board[data-skin="wood"]  .tile{box-shadow:inset 0 0 0 3px #7a5230}
+.board[data-skin="pixel"] .tile{border-radius:0!important;box-shadow:inset 0 0 0 1px rgba(0,0,0,.6)}
+
+.hud{display:flex;gap:8px;align-items:center;flex:1;justify-content:center}
+.hud .tag{background:var(--card);border:1px solid var(--line);border-radius:10px;
+  padding:6px 10px;font-size:13px;font-weight:700;white-space:nowrap}
+.hud .tag.time{color:var(--accent2)}
+.hud .tag.warn{color:var(--bad)}
+.thumb{width:42px;height:42px;border-radius:11px;overflow:hidden;border:1px solid var(--line);flex:none;cursor:pointer}
+.thumb img{width:100%;height:100%;object-fit:cover}
+
+.timebar{height:6px;border-radius:4px;background:var(--card);overflow:hidden;margin:8px 0 4px;display:none}
+.timebar.on{display:block}
+.timebar i{display:block;height:100%;width:100%;
+  background:linear-gradient(90deg,var(--good),var(--accent2));transition:width .2s linear}
+.timebar.low i{background:linear-gradient(90deg,#ff7b54,var(--bad))}
+
+.controls{display:flex;gap:10px;margin-top:10px}
+.controls .btn{flex:1}
+
+/* ===== ОВЕРЛЕИ ===== */
+.overlay{position:absolute;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(6px);
+  display:flex;align-items:center;justify-content:center;padding:20px;z-index:50}
+.overlay.hidden{display:none}
+.sheet{background:var(--bg2);border:1px solid var(--line);border-radius:22px;padding:22px;
+  width:100%;max-width:360px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5);
+  animation:pop .25s ease}
+@keyframes pop{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
+.sheet h2{font-size:23px;margin-bottom:6px}
+.sheet .big{font-size:40px;font-weight:900;margin:8px 0;color:var(--accent2)}
+.sheet .sub{color:var(--muted);font-size:14px;margin-bottom:16px}
+.sheet .stack{display:flex;flex-direction:column;gap:10px}
+.reward-badge{display:inline-flex;align-items:center;gap:6px;background:var(--card);
+  border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-weight:800;
+  color:var(--good);margin-bottom:12px;font-size:14px}
+
+#hintImg{width:100%;max-width:300px;border-radius:14px;border:2px solid var(--line)}
+
+/* ===== МАГАЗИН ===== */
+.shop-card{display:flex;gap:12px;align-items:center;padding:13px;border-radius:16px;
+  background:var(--card);border:1px solid var(--line)}
+.shop-ic{width:58px;height:58px;border-radius:14px;flex:none;display:flex;align-items:center;
+  justify-content:center;font-size:26px;background:var(--bg);border:1px solid var(--line)}
+.shop-tx{flex:1;min-width:0}
+.shop-tx h3{font-size:15px}
+.shop-tx p{margin:3px 0 0;font-size:12px;color:var(--muted)}
+.price{display:inline-flex;align-items:center;gap:5px;font-weight:800;font-size:14px;
+  color:var(--gold);white-space:nowrap}
+.owned{color:var(--good);font-weight:800;font-size:13px}
+
+/* ===== ДОСТИЖЕНИЯ ===== */
+.ach-row{display:flex;gap:12px;align-items:center;padding:12px;border-radius:14px;
+  background:var(--card);border:1px solid var(--line);opacity:.55}
+.ach-row.done{opacity:1;border-color:var(--gold)}
+.ach-ic{width:46px;height:46px;border-radius:12px;flex:none;display:flex;align-items:center;
+  justify-content:center;font-size:22px;background:var(--bg);border:1px solid var(--line)}
+.ach-row.done .ach-ic{background:linear-gradient(135deg,#ffb03a,#ffd166)}
+.ach-tx h3{font-size:14px}
+.ach-tx p{margin:3px 0 0;font-size:12px;color:var(--muted)}
+
+/* ===== ЛИДЕРБОРД ===== */
+.lb-row{display:flex;justify-content:space-between;padding:8px 4px;font-size:14px;
+  border-bottom:1px solid var(--line)}
+.lb-row.me{color:var(--accent2);font-weight:800}
+.lb-row .pos{color:var(--muted);width:28px;display:inline-block}
+
+/* ===== ТЕМЫ/СКИНЫ ===== */
+.theme-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.theme-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px;
+  text-align:center;cursor:pointer;font-size:12px;transition:.15s}
+.theme-card.selected{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset}
+.theme-swatch{display:flex;height:32px;border-radius:9px;overflow:hidden;margin-bottom:7px}
+.theme-swatch i{flex:1}
+.locked{position:relative;opacity:.6}
+.locked::after{content:"🔒";position:absolute;inset:0;display:flex;align-items:center;
+  justify-content:center;font-size:22px}
+
+/* ===== ТОСТ ===== */
+#toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);
+  background:var(--bg2);border:1px solid var(--line);color:var(--text);
+  padding:12px 20px;border-radius:14px;font-weight:700;font-size:14px;z-index:99;
+  box-shadow:0 10px 30px rgba(0,0,0,.4);animation:toastIn .25s ease}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,12px)}to{opacity:1;transform:translate(-50%,0)}}
+
+.langbtns{display:flex;gap:10px}
+.langbtns .btn{flex:1}
+.langbtns .btn.selected{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ЗАГРУЗКА -->
+  <div class="screen active" id="screen-loading">
+    <div class="logo">🧩</div>
+    <h1 id="loadTitle">Пазлы 2</h1>
+    <p id="loadSub" class="muted">Загрузка…</p>
+  </div>
+
+  <!-- МЕНЮ -->
+  <div class="screen" id="screen-menu">
+    <div class="topbar">
+      <div class="logo" style="width:44px;height:44px;border-radius:13px;font-size:24px;animation:none">🧩</div>
+      <div class="grow"></div>
+      <div class="pill" id="coinPill"><span class="c">🪙</span> <span id="coinVal">0</span></div>
+    </div>
+    <div class="scroll" style="justify-content:center">
+      <div style="text-align:center;margin:6px 0 18px">
+        <h1 style="font-size:34px">Пазлы 2</h1>
+        <p class="muted" data-i18n="menuSub">Мозаика · режимы · рекорды</p>
+      </div>
+      <button class="btn primary block" data-go="modes" data-i18n="play">Играть</button>
+      <button class="btn block" id="dailyBtn"><span>🎯</span> <span data-i18n="daily">Задача дня</span></button>
+      <button class="btn block" data-go="shop"><span>🛍️</span> <span data-i18n="shop">Магазин</span></button>
+      <button class="btn block" data-go="ach"><span>🏆</span> <span data-i18n="ach">Достижения</span></button>
+      <button class="btn block" data-go="stats"><span>📊</span> <span data-i18n="stats">Статистика</span></button>
+      <button class="btn block" data-go="settings"><span>⚙️</span> <span data-i18n="settings">Настройки</span></button>
+    </div>
+  </div>
+
+  <!-- РЕЖИМЫ -->
+  <div class="screen" id="screen-modes">
+    <div class="topbar">
+      <button class="icon-btn" data-go="menu">←</button>
+      <div class="page-title" data-i18n="modeTitle">Выбери режим</div>
+      <div class="grow"></div>
+      <div class="pill"><span class="c">🪙</span> <span id="coinVal2">0</span></div>
+    </div>
+    <div class="scroll" id="modeList"></div>
+  </div>
+
+  <!-- УРОВНИ -->
+  <div class="screen" id="screen-levels">
+    <div class="topbar">
+      <button class="icon-btn" data-go="modes">←</button>
+      <div class="page-title" id="levelsTitle">Выбери картинку</div>
+      <div class="grow"></div>
+      <div class="pill" id="attemptPill" style="display:none"></div>
+    </div>
+    <div class="scroll">
+      <div id="levelList" style="display:flex;flex-direction:column;gap:12px"></div>
+      <div class="page-title" style="font-size:16px" data-i18n="gridTitle">Разбивка</div>
+      <div class="chips" id="gridChips"></div>
+      <button class="btn primary block" id="startBtn" style="margin-top:6px" data-i18n="start">Начать</button>
+    </div>
+  </div>
+
+  <!-- ИГРА -->
+  <div class="screen" id="screen-game">
+    <div class="topbar">
+      <button class="icon-btn" id="gameBack">←</button>
+      <div class="hud">
+        <span class="tag" id="hudMode">Классика</span>
+        <span class="tag time" id="hudTime">00:00</span>
+        <span class="tag" id="hudMoves">0</span>
+      </div>
+      <div class="thumb" id="gameThumb"><img alt=""></div>
+    </div>
+    <div class="timebar" id="timeBar"><i></i></div>
+    <div class="boardWrap" id="boardWrap"><div class="board" id="board" data-skin="default"></div></div>
+    <div class="controls">
+      <button class="btn" id="shuffleBtn" data-i18n="shuffle">Перемешать</button>
+      <button class="btn" id="hintBtn">💡 <span data-i18n="hint">Подсказка</span></button>
+    </div>
+  </div>
+
+  <!-- СТАТИСТИКА -->
+  <div class="screen" id="screen-stats">
+    <div class="topbar">
+      <button class="icon-btn" data-go="menu">←</button>
+      <div class="page-title" data-i18n="stats">Статистика</div>
+    </div>
+    <div class="scroll">
+      <div id="overallCard" class="card"></div>
+      <div class="card">
+        <h2 data-i18n="online">Онлайн-рекорды</h2>
+        <div id="lbBox"><p class="muted" data-i18n="lbEmpty">Нет данных — сыграйте партию</p></div>
+      </div>
+      <div id="statsList" style="display:flex;flex-direction:column;gap:10px"></div>
+      <button class="btn block" id="resetBtn" style="color:var(--bad)" data-i18n="reset">Сбросить прогресс</button>
+    </div>
+  </div>
+
+  <!-- МАГАЗИН -->
+  <div class="screen" id="screen-shop">
+    <div class="topbar">
+      <button class="icon-btn" data-go="menu">←</button>
+      <div class="page-title" data-i18n="shop">Магазин</div>
+      <div class="grow"></div>
+      <div class="pill"><span class="c">🪙</span> <span id="coinVal3">0</span></div>
+    </div>
+    <div class="scroll" id="shopList"></div>
+  </div>
+
+  <!-- ДОСТИЖЕНИЯ -->
+  <div class="screen" id="screen-ach">
+    <div class="topbar">
+      <button class="icon-btn" data-go="menu">←</button>
+      <div class="page-title" data-i18n="ach">Достижения</div>
+    </div>
+    <div class="scroll" id="achList"></div>
+  </div>
+
+  <!-- НАСТРОЙКИ -->
+  <div class="screen" id="screen-settings">
+    <div class="topbar">
+      <button class="icon-btn" data-go="menu">←</button>
+      <div class="page-title" data-i18n="settings">Настройки</div>
+    </div>
+    <div class="scroll">
+      <div class="card">
+        <h2 data-i18n="language">Язык</h2>
+        <div class="langbtns" style="margin-top:10px">
+          <button class="btn" data-lang="ru">Русский</button>
+          <button class="btn" data-lang="en">English</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2 data-i18n="theme">Тема</h2>
+        <div class="theme-grid" id="themeGrid" style="margin-top:10px"></div>
+      </div>
+      <div id="settingsExtra"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ОВЕРЛЕИ -->
+<div class="overlay hidden" id="winOverlay">
+  <div class="sheet">
+    <h2 id="winTitle">Собрано!</h2>
+    <div class="big" id="winTime">00:00</div>
+    <div class="sub" id="winSub">Ходы: 0</div>
+    <div class="reward-badge" id="winReward">🪙 +0</div>
+    <div class="stack">
+      <button class="btn primary" id="winNext">Дальше</button>
+      <button class="btn" id="winRetry">Ещё раз</button>
+      <button class="btn" id="winMenu">В меню</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay hidden" id="loseOverlay">
+  <div class="sheet">
+    <h2 id="loseTitle">Время вышло</h2>
+    <div class="sub" id="loseSub"></div>
+    <div class="stack">
+      <button class="btn gold" id="loseAd">▶ +30 сек за рекламу</button>
+      <button class="btn primary" id="loseRetry">Ещё раз</button>
+      <button class="btn" id="loseMenu">В меню</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay hidden" id="attemptOverlay">
+  <div class="sheet">
+    <h2 data-i18n="noAttempts">Попытки кончились</h2>
+    <div class="sub" data-i18n="noAttemptsSub">Посмотрите рекламу или купите попытки</div>
+    <div class="stack">
+      <button class="btn gold" id="attAd">▶ +1 попытка за рекламу</button>
+      <button class="btn primary" id="attBuy">🪙 150 — 5 попыток</button>
+      <button class="btn" data-close="attemptOverlay" data-i18n="menu">Меню</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay hidden" id="hintOverlay">
+  <img id="hintImg" alt="">
+</div>
+
+<div class="overlay hidden" id="dailyOverlay">
+  <div class="sheet">
+    <h2 id="dailyTitle">Ежедневный бонус</h2>
+    <div class="big" id="dailyCoins">+10</div>
+    <div class="sub" id="dailySub"></div>
+    <button class="btn primary block" id="dailyClaim" data-i18n="claim">Забрать</button>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   ПАЗЛЫ 2 · МОЗАИКА
+============================================================ */
+
+/* ============ 1) ЛОКАЛИЗАЦИЯ ============ */
+const I18N = {
+  ru:{
+    title:'Пазлы 2', menuSub:'Мозаика · режимы · рекорды', loading:'Загрузка…',
+    play:'Играть', shop:'Магазин', stats:'Статистика', settings:'Настройки', ach:'Достижения',
+    modeTitle:'Выбери режим', levelsTitle:'Выбери картинку', gridTitle:'Разбивка',
+    classic:'Классика', classicDesc:'Секундомер без ограничений. Бей свой рекорд',
+    blitz:'Блиц', blitzDesc:'Успей собрать за отведённое время. Попытка тратится',
+    cascade:'Каскад', cascadeDesc:'Верный ход добавляет время, ошибка отнимает',
+    zen:'Дзен', zenDesc:'Без таймера и ходов. Просто собирай',
+    daily:'Задача дня', dailyDesc:'Один пазл для всех. 3 попытки в сутки',
+    start:'Начать', back:'Назад', menu:'В меню',
+    moves:'Ходы', time:'Время', best:'Лучшее', hint:'Подсказка', shuffle:'Перемешать',
+    winTitle:'Собрано!', newRecord:'Новый рекорд!', loseTitle:'Время вышло',
+    next:'Дальше', retry:'Ещё раз',
+    space:'Космос', mountains:'Горы', city:'Город', animals:'Саванна', house:'Домик',
+    easy:'Легко', medium:'Средне', hard:'Сложно', insane:'Хардкор',
+    overall:'Всего', gamesPlayed:'Игр сыграно', totalWins:'Побед', coinsEarned:'Монет заработано',
+    online:'Онлайн-рекорды', lbEmpty:'Нет данных — сыграйте партию', lbUnavailable:'Лидерборды недоступны',
+    you:'Вы', noStats:'Пока пусто — сыграйте партию!',
+    reset:'Сбросить прогресс', resetConfirm:'Сбросить весь прогресс, монеты и достижения?',
+    saved:'Готово',
+    noAttempts:'Попытки кончились', noAttemptsSub:'Посмотрите рекламу или купите попытки',
+    attemptsLeft:'Попыток', dailyTriesLeft:'Попыток сегодня',
+    skins:'Скины плиток', boosts:'Усиления', iap:'Покупки',
+    buy:'Купить', owned:'Получено', equip:'Выбрать', equipped:'Выбрано',
+    notEnough:'Не хватает монет',
+    skin_default:'Обычные', skin_gold:'Золото', skin_glass:'Стекло',
+    skin_neon:'Неон', skin_wood:'Дерево', skin_pixel:'Пиксель',
+    theme_sunset:'Закат', theme_mono:'Моно',
+    lockedTheme:'Открыть за 400 🪙',
+    dailyStreak:'Дней подряд', dailyBonus:'Бонус за вход', claim:'Забрать',
+    achUnlocked:'Достижение',
+    a_first:'Первый шаг', a_first_d:'Собери любой пазл',
+    a_3:'Малыш', a_3_d:'Собери 3×3',
+    a_5:'Классик', a_5_d:'Собери 5×5',
+    a_8:'Мастер', a_8_d:'Собери 8×8',
+    a_15:'Легенда', a_15_d:'Собери 15×15',
+    a_blitz:'Скорость', a_blitz_d:'Победи в Блице',
+    a_cascade:'В потоке', a_cascade_d:'Победи в Каскаде',
+    a_daily:'Ежедневный', a_daily_d:'Пройди задачу дня',
+    a_speed:'Спринтер', a_speed_d:'Собери 5×5 быстрее 60 сек',
+    a_rich:'Богач', a_rich_d:'Накопи 500 монет',
+    a_streak:'Верный', a_streak_d:'Заходи 7 дней подряд',
+    a_nohint:'Сам', a_nohint_d:'Победи без подсказок',
+    ad30:'▶ +30 сек'
+  },
+  en:{
+    title:'Puzzles 2', menuSub:'Mosaic · modes · records', loading:'Loading…',
+    play:'Play', shop:'Shop', stats:'Statistics', settings:'Settings', ach:'Achievements',
+    modeTitle:'Choose a mode', levelsTitle:'Choose a picture', gridTitle:'Grid',
+    classic:'Classic', classicDesc:'Stopwatch, no limits. Beat your record',
+    blitz:'Blitz', blitzDesc:'Beat the clock. Costs one attempt',
+    cascade:'Cascade', cascadeDesc:'Right move adds time, wrong one takes it',
+    zen:'Zen', zenDesc:'No timer, no move counter. Just relax',
+    daily:'Daily', dailyDesc:'One puzzle for everyone. 3 tries a day',
+    start:'Start', back:'Back', menu:'Menu',
+    moves:'Moves', time:'Time', best:'Best', hint:'Hint', shuffle:'Shuffle',
+    winTitle:'Solved!', newRecord:'New record!', loseTitle:"Time's up",
+    next:'Next', retry:'Retry',
+    space:'Space', mountains:'Mountains', city:'City', animals:'Savanna', house:'House',
+    easy:'Easy', medium:'Medium', hard:'Hard', insane:'Insane',
+    overall:'Overall', gamesPlayed:'Games played', totalWins:'Wins', coinsEarned:'Coins earned',
+    online:'Online records', lbEmpty:'No data — play a round', lbUnavailable:'Leaderboards unavailable',
+    you:'You', noStats:'Nothing yet — play a round!',
+    reset:'Reset progress', resetConfirm:'Reset all progress, coins and achievements?',
+    saved:'Done',
+    noAttempts:'Out of attempts', noAttemptsSub:'Watch an ad or buy attempts',
+    attemptsLeft:'Attempts', dailyTriesLeft:'Tries left today',
+    skins:'Tile skins', boosts:'Boosts', iap:'Purchases',
+    buy:'Buy', owned:'Owned', equip:'Equip', equipped:'Equipped',
+    notEnough:'Not enough coins',
+    skin_default:'Default', skin_gold:'Gold', skin_glass:'Glass',
+    skin_neon:'Neon', skin_wood:'Wood', skin_pixel:'Pixel',
+    theme_sunset:'Sunset', theme_mono:'Mono',
+    lockedTheme:'Unlock for 400 🪙',
+    dailyStreak:'Day streak', dailyBonus:'Login bonus', claim:'Claim',
+    achUnlocked:'Achievement',
+    a_first:'First step', a_first_d:'Solve any puzzle',
+    a_3:'Tiny', a_3_d:'Solve 3×3',
+    a_5:'Classic', a_5_d:'Solve 5×5',
+    a_8:'Master', a_8_d:'Solve 8×8',
+    a_15:'Legend', a_15_d:'Solve 15×15',
+    a_blitz:'Speed', a_blitz_d:'Win a Blitz',
+    a_cascade:'In flow', a_cascade_d:'Win a Cascade',
+    a_daily:'Daily', a_daily_d:'Complete the daily challenge',
+    a_speed:'Sprinter', a_speed_d:'Solve 5×5 under 60 s',
+    a_rich:'Rich', a_rich_d:'Collect 500 coins',
+    a_streak:'Devoted', a_streak_d:'Log in 7 days in a row',
+    a_nohint:'On my own', a_nohint_d:'Win without hints',
+    ad30:'▶ +30 sec'
+  }
+};
+let LANG = 'ru';
+function t(k, vars){
+  let s = (I18N[LANG] && I18N[LANG][k]) || I18N.ru[k] || k;
+  if(vars) for(const key in vars) s = s.split('{'+key+'}').join(vars[key]);
+  return s;
+}
+function applyI18n(){
+  document.documentElement.lang = LANG;
+  document.getElementById('loadTitle').textContent = t('title');
+  document.getElementById('loadSub').textContent = t('loading');
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    el.textContent = t(el.getAttribute('data-i18n'));
+  });
+  document.querySelectorAll('.level-thumb').forEach(el=>el.alt = t('levelsTitle'));
+}
+
+/* ============================================================
+   2) ПРОЦЕДУРНЫЕ СЦЕНЫ
+============================================================ */
+const SCENES = {
+
+  /* --- КОСМОС --- */
+  space(ctx, s, R){
+    const g = ctx.createLinearGradient(0,0,0,s);
+    g.addColorStop(0,'#04050f'); g.addColorStop(.55,'#0b1230'); g.addColorStop(1,'#05060f');
+    ctx.fillStyle=g; ctx.fillRect(0,0,s,s);
+    for(let i=0;i<180;i++){
+      const x=R()*s, y=R()*s;
+      ctx.fillStyle = y < s*0.4 ? '#ffffff' : '#9fd0ff';
+      ctx.globalAlpha = .3 + R()*0.7;
+      const sz = 1 + (R()<0.15?2:0);
+      ctx.fillRect(x,y,sz,sz);
+    }
+    ctx.globalAlpha=1;
+    const n=ctx.createRadialGradient(s*.3,s*.28,s*.02,s*.3,s*.28,s*.3);
+    n.addColorStop(0,'rgba(150,80,255,.85)'); n.addColorStop(1,'rgba(150,80,255,0)');
+    ctx.fillStyle=n; ctx.fillRect(0,0,s,s*.6);
+    const n2=ctx.createRadialGradient(s*.75,s*.45,s*.02,s*.75,s*.45,s*.25);
+    n2.addColorStop(0,'rgba(0,190,220,.7)'); n2.addColorStop(1,'rgba(0,190,220,0)');
+    ctx.fillStyle=n2; ctx.fillRect(s*.4,0,s*.6,s*.8);
+    ctx.save();
+    ctx.translate(s*.5,s*.68);
+    for(let i=0;i<9;i++){
+      ctx.strokeStyle = i%2 ? 'rgba(255,200,120,.9)' : 'rgba(120,200,255,.55)';
+      ctx.lineWidth = s*0.012;
+      ctx.beginPath();
+      ctx.ellipse(0,0,s*(.34+i*0.014), s*0.085, 0, 0, Math.PI*2);
+      ctx.stroke();
+    }
+    ctx.restore();
+    const pg=ctx.createLinearGradient(0,s*.55,0,s*.82);
+    pg.addColorStop(0,'#ffcf6b'); pg.addColorStop(.5,'#ff8a3d'); pg.addColorStop(1,'#a8391f');
+    ctx.fillStyle=pg;
+    ctx.beginPath(); ctx.arc(s*.5,s*.68,s*.16,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,.28)';
+    ctx.fillRect(s*.36,s*.63,s*.28,s*.02);
+    ctx.fillRect(s*.37,s*.70,s*.26,s*.03);
+    ctx.fillStyle='#cdd9e8';
+    ctx.beginPath(); ctx.arc(s*.18,s*.86,s*.05,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,.16)';
+    ctx.beginPath(); ctx.arc(s*.43,s*.61,s*.032,0,7); ctx.fill();
+    ctx.beginPath(); ctx.arc(s*.57,s*.73,s*.045,0,7); ctx.fill();
+    ctx.beginPath(); ctx.arc(s*.48,s*.70,s*.020,0,7); ctx.fill();
+    ctx.beginPath(); ctx.arc(s*.60,s*.62,s*.024,0,7); ctx.fill();
+    ctx.save();
+    ctx.translate(s*.5,s*.68); ctx.rotate(-.4);
+    ctx.strokeStyle='rgba(255,225,160,.45)'; ctx.lineWidth=s*.018;
+    ctx.beginPath(); ctx.ellipse(0,0,s*.27,s*.055,0,0,Math.PI*2); ctx.stroke();
+    ctx.restore();
+    /* спутник */
+    ctx.save(); ctx.translate(s*.17,s*.20); ctx.rotate(.32);
+    ctx.fillStyle='#cfd8e3'; ctx.fillRect(-s*.02,-s*.014,s*.04,s*.028);
+    ctx.fillStyle='#4a6fa5';
+    ctx.fillRect(-s*.075,-s*.008,s*.045,s*.016);
+    ctx.fillRect( s*.030,-s*.008,s*.045,s*.016);
+    ctx.restore();
+    /* комета */
+    ctx.save(); ctx.translate(s*.82,s*.16); ctx.rotate(.6);
+    const cg=ctx.createLinearGradient(0,0,s*.22,0);
+    cg.addColorStop(0,'rgba(255,255,255,.95)'); cg.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.fillStyle=cg; ctx.fillRect(-s*.22,-s*.006,s*.22,s*.012);
+    ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(0,0,s*.013,0,7); ctx.fill();
+    ctx.restore();
+  },
+
+  /* --- ГОРЫ --- */
+  mountains(ctx,s,R){
+    const sky=ctx.createLinearGradient(0,0,0,s);
+    sky.addColorStop(0,'#1a2a6c'); sky.addColorStop(.45,'#b06ab3');
+    sky.addColorStop(.75,'#ffb26b'); sky.addColorStop(1,'#ffd9a0');
+    ctx.fillStyle=sky; ctx.fillRect(0,0,s,s);
+    const gl=ctx.createRadialGradient(s*.7,s*.33,s*.03,s*.7,s*.33,s*.3);
+    gl.addColorStop(0,'rgba(255,230,160,.75)'); gl.addColorStop(1,'rgba(255,230,160,0)');
+    ctx.fillStyle=gl; ctx.fillRect(s*.3,0,s*.7,s*.72);
+    ctx.fillStyle='#fff0c0'; ctx.beginPath(); ctx.arc(s*.7,s*.33,s*.085,0,7); ctx.fill();
+    cloud(ctx,s*.2,s*.16,s*.085,'rgba(255,255,255,.75)');
+    cloud(ctx,s*.52,s*.10,s*.06,'rgba(255,255,255,.6)');
+    cloud(ctx,s*.86,s*.2,s*.055,'rgba(255,255,255,.5)');
+    bird(ctx,s*.34,s*.28,s*.02); bird(ctx,s*.4,s*.24,s*.016); bird(ctx,s*.30,s*.23,s*.014);
+    ridge(ctx,s,s*.64,[[0,.22],[.13,.06],[.26,.24],[.42,.03],[.58,.25],[.74,.08],[.88,.22],[1,.10]],'#4b3f72');
+    ridge(ctx,s,s*.78,[[0,.26],[.18,.09],[.36,.29],[.54,.07],[.72,.27],[.9,.12],[1,.22]],'#6a5a8c');
+    ridge(ctx,s,s*.92,[[0,.30],[.16,.12],[.34,.33],[.5,.10],[.68,.31],[.84,.16],[1,.28]],'#8f7fb8');
+    ctx.fillStyle='rgba(255,255,255,.85)';
+    ctx.beginPath(); ctx.moveTo(s*.54,s*.78-s*.07);
+    ctx.lineTo(s*.585,s*.78-s*.035); ctx.lineTo(s*.56,s*.78-s*.03);
+    ctx.lineTo(s*.53,s*.78-s*.04); ctx.lineTo(s*.50,s*.78-s*.03); ctx.closePath(); ctx.fill();
+    const lk=ctx.createLinearGradient(0,s*.9,0,s);
+    lk.addColorStop(0,'#3d6ea8'); lk.addColorStop(1,'#16294a');
+    ctx.fillStyle=lk; ctx.fillRect(0,s*.90,s,s*.10);
+    ctx.strokeStyle='rgba(255,220,170,.5)'; ctx.lineWidth=s*.006;
+    for(let i=0;i<7;i++){ const y=s*.915+i*s*.011;
+      ctx.beginPath(); ctx.moveTo(s*(.1+ (i%3)*.12),y); ctx.lineTo(s*(.5+(i%3)*.13),y); ctx.stroke(); }
+    tree(ctx,s*.08,s*.90,s*.11,'#1f4d2e');
+    tree(ctx,s*.93,s*.90,s*.13,'#1a3f27');
+    tree(ctx,s*.86,s*.90,s*.08,'#245c36');
+  },
+
+  /* --- ГОРОД --- */
+  city(ctx,s,R){
+    const sky=ctx.createLinearGradient(0,0,0,s*.78);
+    sky.addColorStop(0,'#0b1026'); sky.addColorStop(.5,'#2b3a67'); sky.addColorStop(1,'#7b5f8e');
+    ctx.fillStyle=sky; ctx.fillRect(0,0,s,s);
+    for(let i=0;i<90;i++){ ctx.globalAlpha=.2+R()*.6; ctx.fillStyle='#fff';
+      ctx.fillRect(R()*s,R()*s*.45,1.6,1.6); }
+    ctx.globalAlpha=1;
+    ctx.fillStyle='rgba(245,240,208,.14)'; ctx.beginPath(); ctx.arc(s*.79,s*.16,s*.13,0,7); ctx.fill();
+    ctx.fillStyle='#f5f0d0'; ctx.beginPath(); ctx.arc(s*.79,s*.16,s*.07,0,7); ctx.fill();
+    let x=-s*.02;
+    while(x<s){
+      const w=s*(.07+R()*.11), h=s*(.18+R()*.26);
+      ctx.fillStyle='#1a2140'; ctx.fillRect(x,s*.78-h,w,h);
+      x+=w+s*.008;
+    }
+    x=-s*.02;
+    const bcol=['#26305c','#2f3a6e','#1f2848','#39406e','#2a3462'];
+    while(x<s){
+      const w=s*(.10+R()*.13), h=s*(.30+R()*.34);
+      const bx=x, by=s*.8-h;
+      ctx.fillStyle=bcol[Math.floor(R()*bcol.length)];
+      ctx.fillRect(bx,by,w,h);
+      const cols=Math.max(2,Math.floor(w/(s*.030)));
+      const rows=Math.max(3,Math.floor(h/(s*.038)));
+      const cw=w/cols*.52, ch=h/rows*.46;
+      for(let i=0;i<cols;i++) for(let j=0;j<rows;j++){
+        const lit=R()<.6;
+        ctx.fillStyle = lit ? (R()<.3?'#ffd166':'#ffe9a8') : 'rgba(120,140,200,.22)';
+        ctx.fillRect(bx+(i+.5)*w/cols-cw/2, by+(j+.5)*h/rows-ch/2, cw, ch);
+      }
+      x+=w+s*.012;
+    }
+    ctx.fillStyle='#14182a'; ctx.fillRect(0,s*.80,s,s*.20);
+    ctx.fillStyle='rgba(255,255,255,.55)';
+    for(let i=0;i<9;i++) ctx.fillRect(i*s/9+s*.015, s*.895, s*.055, s*.009);
+    const lx=s*.14, ly=s*.62;
+    ctx.fillStyle='#39415f'; ctx.fillRect(lx-.004*s,ly,s*.008,s*.20);
+    ctx.fillStyle='#ffe9a8'; ctx.beginPath(); ctx.arc(lx,ly,s*.019,0,7); ctx.fill();
+    const lg=ctx.createRadialGradient(lx,ly,s*.01,lx,ly,s*.14);
+    lg.addColorStop(0,'rgba(255,233,168,.42)'); lg.addColorStop(1,'rgba(255,233,168,0)');
+    ctx.fillStyle=lg; ctx.fillRect(lx-s*.14,ly-s*.12,s*.28,s*.42);
+    const lx2=s*.62;
+    ctx.fillStyle='#39415f'; ctx.fillRect(lx2-.003*s,s*.66,s*.006,s*.16);
+    ctx.fillStyle='#ffe9a8'; ctx.beginPath(); ctx.arc(lx2,s*.66,s*.014,0,7); ctx.fill();
+    ctx.fillStyle='#e8484d'; ctx.fillRect(s*.70,s*.905,s*.16,s*.035);
+    ctx.beginPath(); ctx.moveTo(s*.72,s*.905); ctx.lineTo(s*.76,s*.885);
+    ctx.lineTo(s*.82,s*.885); ctx.lineTo(s*.855,s*.905); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#0d0d14';
+    ctx.beginPath(); ctx.arc(s*.745,s*.945,s*.016,0,7); ctx.fill();
+    ctx.beginPath(); ctx.arc(s*.83,s*.945,s*.016,0,7); ctx.fill();
+    ctx.fillStyle='#bfe3ff'; ctx.fillRect(s*.765,s*.891,s*.022,s*.012);
+    ctx.fillRect(s*.793,s*.891,s*.022,s*.012);
+  },
+
+  /* --- САВАННА --- */
+  animals(ctx,s,R){
+    const sky=ctx.createLinearGradient(0,0,0,s*.76);
+    sky.addColorStop(0,'#2c5f8a'); sky.addColorStop(.42,'#e8a54b'); sky.addColorStop(.82,'#f6d08a');
+    ctx.fillStyle=sky; ctx.fillRect(0,0,s,s);
+    const gl=ctx.createRadialGradient(s*.30,s*.30,s*.08,s*.30,s*.30,s*.42);
+    gl.addColorStop(0,'rgba(255,238,170,.65)'); gl.addColorStop(1,'rgba(255,238,170,0)');
+    ctx.fillStyle=gl; ctx.fillRect(0,0,s*.72,s*.72);
+    ctx.fillStyle='#fff3c4'; ctx.beginPath(); ctx.arc(s*.30,s*.30,s*.105,0,7); ctx.fill();
+    cloud(ctx,s*.6,s*.14,s*.07,'rgba(255,220,170,.55)');
+    cloud(ctx,s*.85,s*.22,s*.05,'rgba(255,220,170,.4)');
+    ridge(ctx,s,s*.74,[[0,.14],[.22,.04],[.46,.17],[.7,.05],[1,.13]],'#c98a4a');
+    const gr=ctx.createLinearGradient(0,s*.72,0,s);
+    gr.addColorStop(0,'#dfa95e'); gr.addColorStop(1,'#a4662f');
+    ctx.fillStyle=gr; ctx.fillRect(0,s*.72,s,s*.28);
+    for(let i=0;i<260;i++){
+      const gx=R()*s, gy=s*.74+R()*s*.26;
+      ctx.strokeStyle = R()<.5 ? '#8a5a28' : '#c98a44';
+      ctx.lineWidth=1.4;
+      ctx.beginPath(); ctx.moveTo(gx,gy);
+      ctx.lineTo(gx+(R()-.5)*5, gy-4-R()*7); ctx.stroke();
+    }
+    acacia(ctx,s*.16,s*.72,s*.10);
+    acacia(ctx,s*.88,s*.66,s*.12);
+    giraffe(ctx,s*.54,s*.94,s*.22,R);
+    elephant(ctx,s*.30,s*.97,s*.14);
+    elephant(ctx,s*.74,s*.99,s*.10);
+    for(let i=0;i<6;i++) bird(ctx,s*(.45+R()*.5), s*(.12+R()*.2), s*.02);
+    ctx.fillStyle='#4d7f39';
+    ctx.beginPath(); ctx.arc(s*.42,s*.94,s*.03,0,7); ctx.fill();
+    ctx.beginPath(); ctx.arc(s*.455,s*.95,s*.024,0,7); ctx.fill();
+    ctx.beginPath(); ctx.arc(s*.39,s*.955,s*.022,0,7); ctx.fill();
+  },
+
+  /* --- ДОМИК --- */
+  house(ctx,s,R){
+    const sky=ctx.createLinearGradient(0,0,0,s*.62);
+    sky.addColorStop(0,'#4f9fe0'); sky.addColorStop(1,'#cdebff');
+    ctx.fillStyle=sky; ctx.fillRect(0,0,s,s);
+    ctx.save(); ctx.translate(s*.82,s*.15);
+    ctx.strokeStyle='rgba(255,240,160,.5)'; ctx.lineWidth=s*.006;
+    for(let i=0;i<12;i++){ ctx.rotate(Math.PI/6);
+      ctx.beginPath(); ctx.moveTo(0,s*.10); ctx.lineTo(0,s*.15); ctx.stroke(); }
+    ctx.fillStyle='#fff0a8'; ctx.beginPath(); ctx.arc(0,0,s*.075,0,7); ctx.fill();
+    ctx.restore();
+    cloud(ctx,s*.22,s*.13,s*.08,'rgba(255,255,255,.9)');
+    cloud(ctx,s*.55,s*.09,s*.065,'rgba(255,255,255,.85)');
+    cloud(ctx,s*.42,s*.22,s*.05,'rgba(255,255,255,.7)');
+    bird(ctx,s*.66,s*.24,s*.018);
+    cloud(ctx,s*.55,s*.09,s*.065,'rgba(255,255,255,.95)');
+    cloud(ctx,s*.72,s*.24,s*.05,'rgba(255,255,255,.75)');
+    const gr=ctx.createLinearGradient(0,s*.6,0,s);
+    gr.addColorStop(0,'#7fce6b'); gr.addColorStop(1,'#3f8f3a');
+    ctx.fillStyle=gr; ctx.fillRect(0,s*.62,s,s*.38);
+    ridge(ctx,s,s*.66,[[0,.08],[.3,.02],[.6,.09],[1,.03]],'#8fd97a');
+    ctx.fillStyle='#f2ead6';
+    for(let i=0;i<11;i++) ctx.fillRect(s*.04+i*s*.088, s*.70, s*.012, s*.10);
+    for(let i=0;i<2;i++) ctx.fillRect(s*.04, s*.72+i*s*.045, s*.92, s*.010);
+    for(let i=0;i<80;i++){
+      const fx=s*.02+R()*s*.96, fy=s*.72+R()*s*.26;
+      ctx.fillStyle=['#ff6b81','#ffd166','#ff9ff3','#ffffff'][Math.floor(R()*4)];
+      ctx.beginPath(); ctx.arc(fx,fy,2+R()*2,0,7); ctx.fill();
+    }
+    ctx.fillStyle='#d9c79a';
+    ctx.beginPath();
+    ctx.moveTo(s*.48,s*.98); ctx.lineTo(s*.55,s*.98);
+    ctx.lineTo(s*.50,s*.74); ctx.lineTo(s*.46,s*.74); ctx.closePath(); ctx.fill();
+    tree(ctx,s*.14,s*.78,s*.16,'#2f7a3a');
+    const bx=s*.34, by=s*.48, bw=s*.36, bh=s*.28;
+    ctx.fillStyle='#fbf3df'; ctx.fillRect(bx,by,bw,bh);
+    ctx.fillStyle='#efe2c6'; ctx.fillRect(bx,by+bh*.72,bw,bh*.28);
+    ctx.fillStyle='#a9743c'; ctx.fillRect(bx+bw*.42, by+bh*.44, bw*.16, bh*.56);
+    ctx.fillStyle='#ffd166'; ctx.beginPath();
+    ctx.arc(bx+bw*.55, by+bh*.74, s*.008, 0, 7); ctx.fill();
+    ctx.fillStyle='#9fe0ff';
+    ctx.fillRect(bx+bw*.10, by+bh*.30, bw*.20, bh*.26);
+    ctx.fillRect(bx+bw*.70, by+bh*.30, bw*.20, bh*.26);
+    ctx.strokeStyle='#a9743c'; ctx.lineWidth=s*.006;
+    ctx.strokeRect(bx+bw*.10, by+bh*.30, bw*.20, bh*.26);
+    ctx.strokeRect(bx+bw*.70, by+bh*.30, bw*.20, bh*.26);
+    ctx.beginPath();
+    ctx.moveTo(bx+bw*.20, by+bh*.30); ctx.lineTo(bx+bw*.20, by+bh*.56);
+    ctx.moveTo(bx+bw*.80, by+bh*.30); ctx.lineTo(bx+bw*.80, by+bh*.56);
+    ctx.stroke();
+    ctx.fillStyle='#d6484d';
+    ctx.beginPath();
+    ctx.moveTo(bx-s*.03, by); ctx.lineTo(bx+bw*.5, by-s*.16);
+    ctx.lineTo(bx+bw+s*.03, by); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#b83b40';
+    ctx.beginPath();
+    ctx.moveTo(bx+bw*.5, by-s*.16); ctx.lineTo(bx+bw+s*.03, by);
+    ctx.lineTo(bx+bw*.5, by+s*.005); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#8a5a3c'; ctx.fillRect(bx+bw*.74, by-s*.13, bw*.08, bh*.18);
+    for(let i=0;i<4;i++){
+      ctx.fillStyle='rgba(255,255,255,'+(0.5-i*.1)+')';
+      ctx.beginPath();
+      ctx.arc(bx+bw*.80+i*s*.02, by-s*.20-i*s*.03, s*.014+i*s*.004, 0, 7);
+      ctx.fill();
+    }
+    ctx.fillStyle='#3f9d4a';
+    ctx.beginPath(); ctx.arc(bx+bw*.90, by+bh, s*.035, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(bx+bw*.98, by+bh, s*.028, 0, 7); ctx.fill();
+  }
+};
+
+/* ============ ВСПОМОГАТЕЛЬНЫЕ РИСОВАЛКИ ============ */
+function cloud(ctx,x,y,r,col){
+  ctx.fillStyle=col;
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, 7);
+  ctx.arc(x+r*.8, y+r*.15, r*.72, 0, 7);
+  ctx.arc(x-r*.8, y+r*.18, r*.62, 0, 7);
+  ctx.arc(x+r*.2, y-r*.4, r*.6, 0, 7);
+  ctx.fill();
+}
+function bird(ctx,x,y,r,col){
+  if(r<=0) return;
+  ctx.save();
+  ctx.strokeStyle = col || 'rgba(40,40,60,.85)';
+  ctx.lineWidth   = Math.max(0.8, r*0.22);
+  ctx.lineCap     = 'round';
+  ctx.lineJoin    = 'round';
+  ctx.beginPath();
+  ctx.moveTo(x-r, y);
+  ctx.quadraticCurveTo(x-r*0.45, y-r*0.80, x, y-r*0.12);
+  ctx.quadraticCurveTo(x+r*0.45, y-r*0.80, x+r, y);
+  ctx.stroke();
+  ctx.restore();
+}
+function ridge(ctx,s,base,pts,col){
+  ctx.fillStyle=col;
+  ctx.beginPath();
+  ctx.moveTo(0, s);
+  ctx.lineTo(0, base - s*pts[0][1]);
+  pts.forEach(p=>ctx.lineTo(s*p[0], base - s*p[1]));
+  ctx.lineTo(s, base - s*pts[pts.length-1][1]);
+  ctx.lineTo(s, s);
+  ctx.closePath(); ctx.fill();
+}
+function tree(ctx,x,y,h,col){
+  const w=h*.62;
+  ctx.fillStyle='#6b4a2a';
+  ctx.fillRect(x-w*.09, y, w*.18, h*.28);
+  ctx.fillStyle=col;
+  for(let i=0;i<3;i++){
+    const sc=1-i*.22, yy=y-h*.18-i*h*.24;
+    ctx.beginPath();
+    ctx.moveTo(x, yy-h*.32*sc);
+    ctx.lineTo(x+w*.5*sc, yy+h*.10*sc);
+    ctx.lineTo(x-w*.5*sc, yy+h*.10*sc);
+    ctx.closePath(); ctx.fill();
+  }
+}
+function acacia(ctx,x,y,h){
+  ctx.fillStyle='#7a5230';
+  ctx.fillRect(x-h*.035, y-h*.5, h*.07, h*.5);
+  ctx.save(); ctx.translate(x, y-h*.5);
+  ctx.strokeStyle='#7a5230'; ctx.lineWidth=h*.045;
+  ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(-h*.18,-h*.16); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo( h*.18,-h*.16); ctx.stroke();
+  ctx.restore();
+  ctx.fillStyle='#4d7f39';
+  ctx.beginPath(); ctx.ellipse(x, y-h*.72, h*.5, h*.16, 0, 0, 7); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(x-h*.28, y-h*.62, h*.26, h*.11, 0, 0, 7); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(x+h*.30, y-h*.60, h*.24, h*.10, 0, 0, 7); ctx.fill();
+}
+function giraffe(ctx,x,y,h,R){
+  R = R || Math.random;
+  const cx=x, by=y;
+  ctx.fillStyle='#e0a44e';
+  [[-.05,-.02],[.02,-.02],[.06,.02],[.13,.02]].forEach(([dx,dy])=>{
+    ctx.fillRect(cx+h*dx, by+h*(dy-0.16), h*.035, h*.42);
+  });
+  ctx.fillStyle='#eaa856';
+  ctx.beginPath(); ctx.ellipse(cx+h*.05, by-h*.30, h*.19, h*.13, 0, 0, 7); ctx.fill();
+  ctx.save(); ctx.translate(cx, by-h*.36); ctx.rotate(-.32);
+  ctx.fillStyle='#eaa856'; ctx.fillRect(-h*.035, -h*.34, h*.075, h*.36);
+  ctx.fillStyle='#eaa856'; ctx.beginPath();
+  ctx.ellipse(0, -h*.34, h*.055, h*.045, 0, 0, 7); ctx.fill();
+  ctx.restore();
+  ctx.fillStyle='#a4662f';
+  for(let i=0;i<10;i++){
+    ctx.beginPath();
+    ctx.arc(cx+h*(R()*0.34-0.12), by-h*(R()*0.34+0.22), h*.026, 0, 7);
+    ctx.fill();
+  }
+}
+function elephant(ctx,x,y,h){
+  const cx=x, by=y;
+  ctx.fillStyle='#8d95a3';
+  [[-.06,-.2],[.05,-.2],[.12,.02],[.02,.02]].forEach(([dx,dy])=>{
+    ctx.fillRect(cx+h*dx, by+h*(dy-0.14), h*.05, h*.40);
+  });
+  ctx.beginPath(); ctx.ellipse(cx+h*.05, by-h*.30, h*.21, h*.15, 0, 0, 7); ctx.fill();
+  ctx.beginPath(); ctx.arc(cx-h*.20, by-h*.40, h*.12, 0, 7); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(cx-h*.30, by-h*.42, h*.075, h*.11, -.2, 0, 7); ctx.fill();
+  ctx.fillStyle='#7f8794';
+  ctx.beginPath();
+  ctx.moveTo(cx-h*.24, by-h*.34);
+  ctx.quadraticCurveTo(cx-h*.40, by-h*.24, cx-h*.34, by-h*.10);
+  ctx.lineTo(cx-h*.26, by-h*.12);
+  ctx.quadraticCurveTo(cx-h*.31, by-h*.22, cx-h*.18, by-h*.30);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#20242e';
+  ctx.beginPath(); ctx.arc(cx-h*.22, by-h*.43, h*.015, 0, 7); ctx.fill();
+}
+
+/* ============================================================
+   3) ДВИЖОК КАРТИНОК
+============================================================ */
+const IMG_CACHE = {};
+function mulberry32(a){
+  return function(){
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function sceneKey(id, size){ return id + '@' + size; }
+function getSceneImage(id, size){
+  const key = sceneKey(id, size);
+  if(IMG_CACHE[key]) return IMG_CACHE[key];
+  const scene = SCENES[id] || SCENES.space;
+  const cv = document.createElement('canvas');
+  cv.width = cv.height = size;
+  const ctx = cv.getContext('2d');
+  const seed = Array.from(id).reduce((a,c)=>a+c.charCodeAt(0), 1337);
+  scene(ctx, size, mulberry32(seed));
+  IMG_CACHE[key] = cv;
+  return cv;
+}
+function sceneThumb(id, size){
+  const cv = document.createElement('canvas');
+  cv.width = cv.height = size;
+  cv.getContext('2d').drawImage(getSceneImage(id, Math.max(size, 256)), 0, 0, size, size);
+  return cv.toDataURL('image/png');
+}
+
+/* ============================================================
+   4) УРОВНИ И РЕЖИМЫ
+============================================================ */
+const LEVELS = [
+  {id:'space',     name:'space'},
+  {id:'mountains', name:'mountains'},
+  {id:'city',      name:'city'},
+  {id:'animals',   name:'animals'},
+  {id:'house',     name:'house'}
+];
+const GRIDS = [
+  {n:3,  label:'3×3',  key:'easy',   coins:6},
+  {n:5,  label:'5×5',  key:'medium', coins:10},
+  {n:8,  label:'8×8',  key:'hard',   coins:20},
+  {n:15, label:'15×15',key:'insane', coins:45}
+];
+const MODES = [
+  {id:'classic', ic:'⏱️', txt:'classic', desc:'classicDesc', limit:0, attempts:false},
+  {id:'blitz',   ic:'⚡', txt:'blitz',   desc:'blitzDesc',   limit:1, attempts:true},
+  {id:'cascade', ic:'🌀', txt:'cascade', desc:'cascadeDesc', limit:1, attempts:false},
+  {id:'zen',     ic:'🧘', txt:'zen',     desc:'zenDesc',     limit:0, attempts:false},
+  {id:'daily',   ic:'🎯', txt:'daily',   desc:'dailyDesc',   limit:1, attempts:true}
+];
+
+/* ============================================================
+   5) СОСТОЯНИЕ + СОХРАНЕНИЕ
+============================================================ */
+const STORE_KEY = 'puzzles2_state_v1';
+const defState = () => ({
+  coins: 120,
+  lang: 'ru',
+  theme: 'dark',
+  skin: 'default',
+  skins: ['default'],
+  lastDaily: 0,
+  streak: 0,
+  dailyTries: 3,
+  dailyDate: '',
+  best: {},
+  stats: {},
+  ach: {},
+  totals: {games:0, wins:0, coins:0},
+  blitzAttempts: 8
+});
+let S = defState();
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if(raw) S = Object.assign(defState(), JSON.parse(raw));
+  }catch(e){ S = defState(); }
+}
+function saveState(){
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(S)); }catch(e){}
+  pushCloudSave();
+}
+function todayStr(){
+  const d = new Date();
+  return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
+}
+
+/* ============================================================
+   6) ЗВУК
+============================================================ */
+const Sound = (()=>{
+  let ctxA = null, on = true;
+  function ac(){
+    if(!ctxA){
+      try{ ctxA = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ on=false; }
+    }
+    return ctxA;
+  }
+  function beep(freq, dur, type, vol){
+    if(!on) return;
+    const a = ac(); if(!a) return;
+    if(a.state === 'suspended') a.resume();
+    const o = a.createOscillator(), g = a.createGain();
+    o.type = type||'sine'; o.frequency.value = freq;
+    g.gain.value = 0;
+    o.connect(g); g.connect(a.destination);
+    const now = a.currentTime;
+    g.gain.linearRampToValueAtTime(vol||.08, now+.012);
+    g.gain.exponentialRampToValueAtTime(.0001, now+dur);
+    o.start(now); o.stop(now+dur+.02);
+  }
+  return {
+    tap(){ beep(520, .07, 'triangle', .05); },
+    pick(){ beep(680, .09, 'square', .045); },
+    good(){ beep(760,.10,'sine',.07); setTimeout(()=>beep(1040,.12,'sine',.07),80); },
+    swap(){ beep(420,.07,'triangle',.045); setTimeout(()=>beep(560,.07,'triangle',.045),60); },
+    bad(){ beep(180,.18,'sawtooth',.06); },
+    win(){ [660,880,1040,1320].forEach((f,i)=>setTimeout(()=>beep(f,.18,'sine',.08),i*120)); },
+    coin(){ beep(1180,.09,'square',.05); setTimeout(()=>beep(1560,.10,'square',.05),70); },
+    click(){ beep(300,.05,'triangle',.04); }
+  };
+})();
+
+/* ============================================================
+   7) НАВИГАЦИЯ
+============================================================ */
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const el = document.getElementById('screen-'+id);
+  if(el) el.classList.add('active');
+  else document.getElementById('screen-menu').classList.add('active');
+}
+document.querySelectorAll('[data-go]').forEach(b=>{
+  b.addEventListener('click', ()=>{ Sound.click(); show(b.getAttribute('data-go')); });
+});
+document.querySelectorAll('[data-close]').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    document.getElementById(b.getAttribute('data-close')).classList.add('hidden');
+  });
+});
+
+/* ============================================================
+   8) МОНЕТЫ / ТОСТ
+============================================================ */
+function setCoins(v){
+  S.coins = Math.max(0, Math.floor(v));
+  ['coinVal','coinVal2','coinVal3'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.textContent = S.coins;
+  });
+}
+function addCoins(n){
+  S.totals.coins += n;
+  setCoins(S.coins + n);
+  if(n>0) Sound.coin();
+  checkAch();
+  saveState();
+}
+let toastTimer = null;
+function toast(msg){
+  let el = document.getElementById('toast');
+  if(el) el.remove();
+  el = document.createElement('div');
+  el.id = 'toast'; el.textContent = msg;
+  document.body.appendChild(el);
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>el.remove(), 1800);
+}
+function fmtTime(sec){
+  sec = Math.max(0, Math.round(sec));
+  const m = Math.floor(sec/60), s = sec%60;
+  return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}
+
+/* ============================================================
+   9) ЭКРАН РЕЖИМОВ
+============================================================ */
+let chosenMode = 'classic';
+function renderModes(){
+  const box = document.getElementById('modeList');
+  box.innerHTML = '';
+  MODES.forEach(m=>{
+    const card = document.createElement('div');
+    card.className = 'mode-card' + (chosenMode===m.id ? ' selected':'');
+    card.innerHTML =
+      '<div class="mode-ic">'+m.ic+'</div>'+
+      '<div class="mode-tx"><h3>'+t(m.txt)+'</h3><p>'+t(m.desc)+'</p></div>';
+    card.addEventListener('click', ()=>{
+      Sound.click();
+      chosenMode = m.id;
+      renderModes();
+      prepLevels();
+      show('levels');
+    });
+    box.appendChild(card);
+  });
+}
+
+/* ============================================================
+   10) ЭКРАН УРОВНЕЙ
+============================================================ */
+let chosenLevel = 'space';
+let chosenGrid = 5;
+function renderLevels(){
+  const list = document.getElementById('levelList');
+  list.innerHTML = '';
+  document.getElementById('levelsTitle').textContent = t('levelsTitle');
+  LEVELS.forEach(lv=>{
+    const card = document.createElement('div');
+    card.className = 'level-card' + (chosenLevel===lv.id ? ' selected':'');
+    const img = sceneThumb(lv.id, 150);
+    card.innerHTML =
+      '<img class="level-thumb" src="'+img+'" alt="">'+
+      '<div class="level-meta"><h3>'+t(lv.name)+'</h3>'+
+      '<p>'+(S.best[lv.id+'|'+chosenGrid] ? t('best')+': '+fmtTime(S.best[lv.id+'|'+chosenGrid]) : t('noStats'))+'</p></div>';
+    card.addEventListener('click', ()=>{
+      Sound.click(); chosenLevel = lv.id; renderLevels();
+    });
+    list.appendChild(card);
+  });
+
+  const chips = document.getElementById('gridChips');
+  chips.innerHTML = '';
+  GRIDS.forEach(g=>{
+    const c = document.createElement('div');
+    c.className = 'chip' + (chosenGrid===g.n ? ' selected':'');
+    c.innerHTML = g.label + '<br><small>'+t(g.key)+'</small>';
+    c.addEventListener('click', ()=>{ Sound.click(); chosenGrid = g.n; renderLevels(); });
+    chips.appendChild(c);
+  });
+
+  const pill = document.getElementById('attemptPill');
+  const mode = MODES.find(m=>m.id===chosenMode);
+  if(mode && mode.attempts){
+    pill.style.display = '';
+    if(chosenMode==='daily'){
+      pill.textContent = t('dailyTriesLeft')+': '+S.dailyTries;
+    }else{
+      pill.textContent = t('attemptsLeft')+': '+S.blitzAttempts;
+    }
+  }else{
+    pill.style.display = 'none';
+  }
+  document.getElementById('startBtn').textContent = t('start');
+}
+function prepLevels(){ renderLevels(); }
+
+/* ============================================================
+   11) ЛОГИКА ИГРЫ
+============================================================ */
+const G = {
+  n:5, levelId:'space', mode:'classic',
+  order:[],
+  sel:-1,
+  moves:0, elapsed:0, timerId:null,
+  startTs:0, running:false,
+  limit:0, remaining:0,
+  hintSent:false, adUsed:false,
+  canvasSize:0
+};
+let boardEl, boardWrapEl;
+
+function levelKey(){ return G.levelId+'|'+G.n; }
+
+function buildBoard(){
+  const n = G.n;
+  boardEl.setAttribute('data-skin', S.skin);
+  boardEl.style.gridTemplateColumns = 'repeat('+n+',1fr)';
+  boardEl.innerHTML = '';
+
+  const wrap = boardWrapEl.getBoundingClientRect();
+  const avail = Math.min(wrap.width, wrap.height) - 8;
+  const boardPx = Math.max(180, Math.floor(avail));
+  boardEl.style.width = boardPx+'px';
+  boardEl.style.height = boardPx+'px';
+  const tilePx = Math.floor((boardPx - 4 - (n-1)*2) / n);
+
+  const size = tilePx * n;
+  G.canvasSize = size;
+  const src = getSceneImage(G.levelId, Math.max(size, 300));
+
+  G.order = [];
+  for(let i=0;i<n*n;i++){
+    const tile = document.createElement('div');
+    tile.className = 'tile';
+    tile.dataset.idx = i;
+    tile.style.width = tilePx+'px';
+    tile.style.height = tilePx+'px';
+    tile.style.backgroundImage = 'url('+src.toDataURL('image/png')+')';
+    tile.style.backgroundSize = (tilePx*n)+'px '+(tilePx*n)+'px';
+    tile.addEventListener('click', ()=>onTileClick(i));
+    boardEl.appendChild(tile);
+    G.order.push(i);
+    paintTile(tile, i, tilePx);
+  }
+}
+function paintTile(tile, originalIdx, tilePx){
+  const n = G.n;
+  const col = originalIdx % n;
+  const row = Math.floor(originalIdx / n);
+  tile.style.backgroundPosition = (-col*tilePx)+'px '+(-row*tilePx)+'px';
+}
+function repaintAll(){
+  const n = G.n;
+  const wrap = boardWrapEl.getBoundingClientRect();
+  const avail = Math.min(wrap.width, wrap.height) - 8;
+  const boardPx = Math.max(180, Math.floor(avail));
+  const tilePx = Math.floor((boardPx - 4 - (n-1)*2) / n);
+  const src = getSceneImage(G.levelId, Math.max(tilePx*n, 300));
+  const url = 'url('+src.toDataURL('image/png')+')';
+  for(let i=0;i<n*n;i++){
+    const tile = boardEl.children[i];
+    tile.style.width = tilePx+'px';
+    tile.style.height = tilePx+'px';
+    tile.style.backgroundImage = url;
+    tile.style.backgroundSize = (tilePx*n)+'px '+(tilePx*n)+'px';
+    paintTile(tile, G.order[i], tilePx);
+    tile.classList.remove('selected');
+  }
+}
+
+function shuffleOrder(){
+  const arr = G.order.slice();
+  for(let i=arr.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]] = [arr[j],arr[i]];
+  }
+  if(isSolvedOrder(arr)) return shuffleOrder();
+  return arr;
+}
+function isSolvedOrder(arr){
+  for(let i=0;i<arr.length;i++) if(arr[i]!==i) return false;
+  return true;
+}
+
+function onTileClick(i){
+  if(!G.running) return;
+  if(G.sel === -1){
+    G.sel = i;
+    boardEl.children[i].classList.add('selected');
+    Sound.pick();
+    return;
+  }
+  if(G.sel === i){
+    boardEl.children[i].classList.remove('selected');
+    G.sel = -1;
+    return;
+  }
+  const a = G.sel, b = i;
+  const oa = G.order[a], ob = G.order[b];
+  G.order[a] = ob; G.order[b] = oa;
+
+  const tilePx = parseInt(boardEl.children[0].style.width);
+  paintTile(boardEl.children[a], G.order[a], tilePx);
+  paintTile(boardEl.children[b], G.order[b], tilePx);
+  boardEl.children[a].classList.remove('selected');
+  G.sel = -1;
+  G.moves++;
+  document.getElementById('hudMoves').textContent = t('moves')+': '+G.moves;
+
+  if(G.mode === 'cascade'){
+    G.limit += 3;
+    G.remaining = G.limit - G.elapsed;
+    updateTimebar();
+    Sound.good();
+  }else{
+    Sound.swap();
+  }
+  if(isSolvedOrder(G.order)) winGame();
+}
+
+function startGame(){
+  const mode = MODES.find(m=>m.id===chosenMode) || MODES[0];
+  G.mode = mode.id;
+  G.n = chosenGrid;
+  G.levelId = chosenLevel;
+  G.sel = -1;
+  G.moves = 0;
+  G.hintSent = false;
+  G.adUsed = false;
+
+  if(mode.attempts){
+    if(mode.id==='daily'){
+      checkDailyReset();
+      if(S.dailyTries <= 0){ openAttemptOverlay(); return; }
+      S.dailyTries--;
+    }else{
+      if(S.blitzAttempts <= 0){ openAttemptOverlay(); return; }
+      S.blitzAttempts--;
+    }
+    saveState();
+  }
+
+  if(mode.id==='blitz')  G.limit = 30 + G.n*10;
+  if(mode.id==='cascade')G.limit = 45 + G.n*12;
+  if(mode.id==='daily')  G.limit = 40 + G.n*14;
+  if(mode.id==='zen')    G.limit = 0;
+
+  document.getElementById('hudMode').textContent = t(mode.txt);
+  document.getElementById('hudMoves').textContent = t('moves')+': 0';
+  document.getElementById('hudTime').textContent = '00:00';
+  document.getElementById('gameThumb').querySelector('img').src = sceneThumb(G.levelId, 120);
+
+  show('game');
+  requestAnimationFrame(()=>{
+    boardEl = document.getElementById('board');
+    boardWrapEl = document.getElementById('boardWrap');
+    buildBoard();
+    G.order = shuffleOrder();
+    repaintAll();
+
+    G.elapsed = 0;
+    G.remaining = G.limit;
+    updateTimebar();
+    startTimer();
+    onGameStart();
+  });
+}
+
+function startTimer(){
+  stopTimer();
+  G.startTs = performance.now() - G.elapsed*1000;
+  G.running = true;
+  G.timerId = setInterval(()=>{
+    G.elapsed = (performance.now() - G.startTs)/1000;
+    document.getElementById('hudTime').textContent = fmtTime(G.elapsed);
+    if(G.limit > 0){
+      G.remaining = G.limit - G.elapsed;
+      updateTimebar();
+      if(G.remaining <= 0){
+        stopTimer();
+        loseGame();
+      }
+    }
+  }, 200);
+}
+function stopTimer(){
+  if(G.timerId){ clearInterval(G.timerId); G.timerId = null; }
+  G.running = false;
+}
+function updateTimebar(){
+  const bar = document.getElementById('timeBar');
+  const fill = bar.querySelector('i');
+  if(G.limit > 0){
+    bar.classList.add('on');
+    const pct = Math.max(0, Math.min(1, G.remaining / G.limit));
+    fill.style.width = (pct*100)+'%';
+    bar.classList.toggle('low', pct < .28);
+  }else{
+    bar.classList.remove('on');
+  }
+}
+
+/* ============ ПОБЕДА ============ */
+function winGame(){
+  stopTimer(); onGameStop();
+  const elapsed = G.elapsed;
+  const key = levelKey();
+  const prevBest = S.best[key];
+  const isRecord = !prevBest || elapsed < prevBest;
+  if(isRecord) S.best[key] = elapsed;
+
+  S.totals.games++;
+  S.totals.wins++;
+  const st = S.stats[G.mode] || {games:0, wins:0, best:0};
+  st.games++; st.wins++;
+  if(!st.best || elapsed < st.best) st.best = elapsed;
+  S.stats[G.mode] = st;
+
+  const g = GRIDS.find(x=>x.n===G.n) || GRIDS[1];
+  let reward = g.coins;
+  if(G.mode==='blitz')  reward = Math.round(reward*1.4);
+  if(G.mode==='daily')  reward = Math.round(reward*1.6);
+  if(!G.hintSent)       reward += 5;
+  if(G.mode==='zen')    reward = Math.round(reward*0.6);
+  addCoins(reward);
+
+  saveState();
+  Sound.win();
+
+  document.getElementById('winTitle').textContent = isRecord ? t('newRecord') : t('winTitle');
+  document.getElementById('winTime').textContent = fmtTime(elapsed);
+  document.getElementById('winSub').textContent = t('moves')+': '+G.moves+' · '+G.n+'×'+G.n;
+  document.getElementById('winReward').textContent = '🪙 +'+reward;
+  document.getElementById('winOverlay').classList.remove('hidden');
+
+  const mode = MODES.find(m=>m.id===G.mode);
+  if(mode.attempts) saveState();
+
+  unlockAch('a_first', true);
+  if(G.n===3)  unlockAch('a_3', true);
+  if(G.n===5)  unlockAch('a_5', true);
+  if(G.n===8)  unlockAch('a_8', true);
+  if(G.n===15) unlockAch('a_15', true);
+  if(G.mode==='blitz')   unlockAch('a_blitz', true);
+  if(G.mode==='cascade') unlockAch('a_cascade', true);
+  if(G.mode==='daily')   unlockAch('a_daily', true);
+  if(G.n===5 && elapsed < 60) unlockAch('a_speed', true);
+  if(!G.hintSent)        unlockAch('a_nohint', true);
+
+  updateLeaderboard(G.mode, elapsed);
+  checkAch();
+  pushCloudSave();
+}
+
+/* ============ ПРОИГРЫШ ============ */
+function loseGame(){
+  G.running = false; onGameStop();
+  Sound.bad();
+  const st = S.stats[G.mode] || {games:0, wins:0, best:0};
+  st.games++;
+  S.stats[G.mode] = st;
+  S.totals.games++;
+  saveState();
+
+  document.getElementById('loseTitle').textContent = t('loseTitle');
+  document.getElementById('loseSub').textContent = t('moves')+': '+G.moves+' · '+G.n+'×'+G.n+' · '+mode_name(G.mode);
+  document.getElementById('loseAd').style.display = G.adUsed ? 'none' : '';
+  document.getElementById('loseAd').textContent = t('ad30');
+  document.getElementById('loseOverlay').classList.remove('hidden');
+}
+function mode_name(id){
+  const m = MODES.find(x=>x.id===id);
+  return m ? t(m.txt) : id;
+}
+
+/* ============ ПОДСКАЗКА ============ */
+function useHint(){
+  if(!G.running) return;
+  G.hintSent = true;
+  const src = getSceneImage(G.levelId, Math.max(G.canvasSize, 300));
+  const img = document.getElementById('hintImg');
+  img.src = src.toDataURL('image/png');
+  document.getElementById('hintOverlay').classList.remove('hidden');
+  Sound.pick();
+  setTimeout(()=>document.getElementById('hintOverlay').classList.add('hidden'), 2200);
+}
+function shuffleNow(){
+  if(!G.running) return;
+  G.order = shuffleOrder();
+  repaintAll();
+  Sound.swap();
+}
+
+/* ============================================================
+   12) КНОПКИ ИГРЫ
+============================================================ */
+document.getElementById('gameBack').addEventListener('click', ()=>{
+  Sound.click(); stopTimer(); onGameStop();
+  document.getElementById('winOverlay').classList.add('hidden');
+  document.getElementById('loseOverlay').classList.add('hidden');
+  prepLevels(); show('levels');
+});
+document.getElementById('shuffleBtn').addEventListener('click', shuffleNow);
+document.getElementById('hintBtn').addEventListener('click', useHint);
+document.getElementById('startBtn').addEventListener('click', startGame);
+
+document.getElementById('winNext').addEventListener('click', ()=>{
+  document.getElementById('winOverlay').classList.add('hidden');
+  const li = LEVELS.findIndex(l=>l.id===chosenLevel);
+  const gi = GRIDS.findIndex(g=>g.n===chosenGrid);
+  if(gi < GRIDS.length-1) chosenGrid = GRIDS[gi+1].n;
+  else { chosenGrid = GRIDS[0].n; chosenLevel = LEVELS[(li+1)%LEVELS.length].id; }
+  prepLevels();
+  startGame();
+});
+document.getElementById('winRetry').addEventListener('click', ()=>{
+  document.getElementById('winOverlay').classList.add('hidden');
+  startGame();
+});
+document.getElementById('winMenu').addEventListener('click', ()=>{
+  document.getElementById('winOverlay').classList.add('hidden');
+  renderModes(); show('modes');
+});
+document.getElementById('loseRetry').addEventListener('click', ()=>{
+  document.getElementById('loseOverlay').classList.add('hidden');
+  startGame();
+});
+document.getElementById('loseMenu').addEventListener('click', ()=>{
+  document.getElementById('loseOverlay').classList.add('hidden');
+  renderModes(); show('modes');
+});
+document.getElementById('loseAd').addEventListener('click', ()=>{
+  watchRewarded(()=>{
+    G.adUsed = true;
+    document.getElementById('loseOverlay').classList.add('hidden');
+    G.limit += 30;
+    G.startTs = performance.now() - G.elapsed*1000;
+    startTimer();
+    updateTimebar();
+    toast('+30 🕒');
+  });
+});
+document.getElementById('gameThumb').addEventListener('click', useHint);
+
+/* ============================================================
+   13) ПОПЫТКИ / РЕКЛАМА
+============================================================ */
+function openAttemptOverlay(){
+  document.getElementById('attemptOverlay').classList.remove('hidden');
+}
+document.getElementById('attAd').addEventListener('click', ()=>{
+  watchRewarded(()=>{
+    document.getElementById('attemptOverlay').classList.add('hidden');
+    if(chosenMode==='daily') S.dailyTries++;
+    else S.blitzAttempts++;
+    saveState();
+    renderLevels();
+    toast('+1 ▶');
+  });
+});
+document.getElementById('attBuy').addEventListener('click', ()=>{
+  if(S.coins < 150){ toast(t('notEnough')); return; }
+  addCoins(-150);
+  if(chosenMode==='daily') S.dailyTries += 5;
+  else S.blitzAttempts += 5;
+  saveState();
+  document.getElementById('attemptOverlay').classList.add('hidden');
+  renderLevels();
+  toast('+5');
+});
+
+/* ============================================================
+   14) ЕЖЕДНЕВНАЯ ЗАДАЧА
+============================================================ */
+function checkDailyReset(){
+  const td = todayStr();
+  if(S.dailyDate !== td){
+    S.dailyDate = td;
+    S.dailyTries = 3;
+    const y = new Date(); y.setDate(y.getDate()-1);
+    const ys = y.getFullYear()+'-'+(y.getMonth()+1)+'-'+y.getDate();
+    S.streak = (S.lastDaily === ys) ? S.streak+1 : 1;
+    S.lastDaily = td;
+    saveState();
+  }
+}
+function openDaily(){
+  checkDailyReset();
+  document.getElementById('dailyTitle').textContent = t('dailyStreak');
+  document.getElementById('dailyCoins').textContent = S.streak+' 🔥';
+  document.getElementById('dailySub').textContent = t('dailyTriesLeft')+': '+S.dailyTries+' · '+t('dailyBonus');
+  document.getElementById('dailyOverlay').classList.remove('hidden');
+}
+document.getElementById('dailyBtn').addEventListener('click', ()=>{ Sound.click(); openDaily(); });
+document.getElementById('dailyClaim').addEventListener('click', ()=>{
+  const bonus = 15 + Math.min(S.streak,7)*5;
+  addCoins(bonus);
+  document.getElementById('dailyOverlay').classList.add('hidden');
+  toast('🪙 +'+bonus);
+  unlockAch('a_streak', S.streak >= 7);
+  checkAch();
+});
+
+/* ============================================================
+   15) МАГАЗИН
+============================================================ */
+const SKINS = [
+  {id:'default', ic:'🧩', price:0, key:'skin_default'},
+  {id:'gold',    ic:'🥇', price:150, key:'skin_gold'},
+  {id:'glass',   ic:'💎', price:200, key:'skin_glass'},
+  {id:'neon',    ic:'🔷', price:250, key:'skin_neon'},
+  {id:'wood',    ic:'🪵', price:300, key:'skin_wood'},
+  {id:'pixel',   ic:'👾', price:350, key:'skin_pixel'}
+];
+function renderShop(){
+  const box = document.getElementById('shopList');
+  box.innerHTML = '';
+  const h1 = document.createElement('div');
+  h1.className='page-title'; h1.style.fontSize='16px'; h1.textContent = t('skins');
+  box.appendChild(h1);
+  SKINS.forEach(sk=>{
+    const owned = S.skins.indexOf(sk.id) >= 0;
+    const equipped = S.skin === sk.id;
+    const row = document.createElement('div');
+    row.className = 'shop-card';
+    row.innerHTML =
+      '<div class="shop-ic">'+sk.ic+'</div>'+
+      '<div class="shop-tx"><h3>'+t(sk.key)+'</h3>'+
+        '<p>'+(owned ? (equipped ? t('equipped') : t('owned')) : t('buy'))+'</p></div>'+
+      (owned
+        ? (equipped
+            ? '<span class="owned">✓ '+t('equipped')+'</span>'
+            : '<button class="btn small primary">'+t('equip')+'</button>')
+        : '<span class="price">🪙 '+sk.price+'</span>');
+    const btn = row.querySelector('button');
+    if(btn){
+      btn.addEventListener('click', ()=>{
+        Sound.click();
+        S.skin = sk.id; saveState(); renderShop(); toast(t('saved'));
+      });
+    }else if(!owned){
+      row.style.cursor='pointer';
+      row.addEventListener('click', ()=>{
+        if(S.coins < sk.price){ toast(t('notEnough')); return; }
+        addCoins(-sk.price);
+        S.skins.push(sk.id); S.skin = sk.id;
+        saveState(); renderShop();
+        toast('🪙 -'+sk.price+' → '+t(sk.key));
+      });
+    }
+    box.appendChild(row);
+  });
+
+  const h2 = document.createElement('div');
+  h2.className='page-title'; h2.style.fontSize='16px'; h2.style.marginTop='8px';
+  h2.textContent = t('boosts');
+  box.appendChild(h2);
+
+  const boost = document.createElement('div');
+  boost.className = 'shop-card';
+  boost.innerHTML =
+    '<div class="shop-ic">⚡</div>'+
+    '<div class="shop-tx"><h3>+3 ' + t('attemptsLeft') + '</h3><p>' + t('blitz') + ' · ' + t('daily') + '</p></div>'+
+    '<span class="price">🪙 120</span>';
+  boost.addEventListener('click', ()=>{
+    if(S.coins < 120){ toast(t('notEnough')); return; }
+    addCoins(-120);
+    S.blitzAttempts += 3; S.dailyTries += 3;
+    const td = todayStr(); S.dailyDate = td;
+    saveState(); toast('+3 ⚡');
+  });
+  box.appendChild(boost);
+
+  const coinAd = document.createElement('div');
+  coinAd.className = 'shop-card';
+  coinAd.innerHTML =
+    '<div class="shop-ic">🪙</div>'+
+    '<div class="shop-tx"><h3>+40 ' + t('coinsEarned') + '</h3><p>' + t('shop') + '</p></div>'+
+    '<button class="btn small gold">▶ '+t('claim')+'</button>';
+  coinAd.querySelector('button').addEventListener('click', ()=>{
+    watchRewarded(()=>{ addCoins(40); toast('🪙 +40'); });
+  });
+  box.appendChild(coinAd);
+}
+
+/* ============================================================
+   16) ДОСТИЖЕНИЯ
+============================================================ */
+const ACHS = [
+  {id:'a_first', ic:'👣'}, {id:'a_3', ic:'🧩'}, {id:'a_5', ic:'⭐'},
+  {id:'a_8', ic:'🎓'}, {id:'a_15', ic:'👑'}, {id:'a_blitz', ic:'⚡'},
+  {id:'a_cascade', ic:'🌀'}, {id:'a_daily', ic:'🎯'}, {id:'a_speed', ic:'🏃'},
+  {id:'a_rich', ic:'💰'}, {id:'a_streak', ic:'🔥'}, {id:'a_nohint', ic:'🧠'}
+];
+function unlockAch(id, cond){
+  if(cond && !S.ach[id]){
+    S.ach[id] = true;
+    const a = ACHS.find(x=>x.id===id);
+    if(a) toast(t('achUnlocked')+': '+t(id));
+    saveState();
+  }
+}
+function checkAch(){
+  unlockAch('a_rich', S.coins >= 500);
+  unlockAch('a_streak', S.streak >= 7);
+}
+function renderAch(){
+  const box = document.getElementById('achList');
+  box.innerHTML = '';
+  ACHS.forEach(a=>{
+    const done = !!S.ach[a.id];
+    const row = document.createElement('div');
+    row.className = 'ach-row' + (done ? ' done':'');
+    row.innerHTML =
+      '<div class="ach-ic">'+a.ic+'</div>'+
+      '<div class="ach-tx"><h3>'+t(a.id)+'</h3><p>'+t(a.id+'_d')+'</p></div>'+
+      (done ? '<span class="owned">✓</span>' : '');
+    box.appendChild(row);
+  });
+}
+
+/* ============================================================
+   17) СТАТИСТИКА + ЛИДЕРБОРДЫ
+============================================================ */
+function renderStats(){
+  const overall = document.getElementById('overallCard');
+  overall.innerHTML =
+    '<h2>'+t('overall')+'</h2>'+
+    '<div class="stat-row"><span>'+t('gamesPlayed')+'</span><b>'+S.totals.games+'</b></div>'+
+    '<div class="stat-row"><span>'+t('totalWins')+'</span><b>'+S.totals.wins+'</b></div>'+
+    '<div class="stat-row"><span>'+t('coinsEarned')+'</span><b>'+S.totals.coins+'</b></div>'+
+    '<div class="stat-row"><span>🪙</span><b>'+S.coins+'</b></div>';
+
+  const list = document.getElementById('statsList');
+  list.innerHTML = '';
+  MODES.forEach(m=>{
+    const st = S.stats[m.id];
+    if(!st) return;
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML =
+      '<h2>'+t(m.txt)+'</h2>'+
+      '<div class="stat-row"><span>'+t('gamesPlayed')+'</span><b>'+st.games+'</b></div>'+
+      '<div class="stat-row"><span>'+t('totalWins')+'</span><b>'+st.wins+'</b></div>'+
+      '<div class="stat-row"><span>'+t('best')+'</span><b>'+(st.best ? fmtTime(st.best):'—')+'</b></div>';
+    list.appendChild(card);
+  });
+  if(!list.children.length){
+    const p = document.createElement('p');
+    p.className='muted'; p.textContent = t('noStats');
+    list.appendChild(p);
+  }
+  renderLeaderboard();
+}
+
+let localLB = {};
+function loadLB(){
+  try{
+    const raw = localStorage.getItem('puzzles2_lb');
+    if(raw) localLB = JSON.parse(raw);
+  }catch(e){ localLB = {}; }
+}
+function saveLB(){ try{ localStorage.setItem('puzzles2_lb', JSON.stringify(localLB)); }catch(e){} }
+function updateLeaderboard(mode, elapsed){
+  if(mode==='zen' || mode==='cascade') return;
+  if(!localLB[mode] || elapsed < localLB[mode]) localLB[mode] = elapsed;
+  saveLB();
+}
+function renderLeaderboard(){
+  const box = document.getElementById('lbBox');
+  const mode = (G.mode && localLB[G.mode] !== undefined) ? G.mode : 'classic';
+  const entries = [];
+  for(const k in localLB){
+    entries.push({k, v:localLB[k]});
+  }
+  entries.sort((a,b)=>a.v-b.v);
+  if(!entries.length){
+    box.innerHTML = '<p class="muted">'+t('lbEmpty')+'</p>';
+    return;
+  }
+  box.innerHTML = entries.slice(0,8).map((e,i)=>
+    '<div class="lb-row'+(e.k===mode?' me':'')+'"><span><span class="pos">'+(i+1)+'.</span> '+mode_name(e.k)+'</span><b>'+fmtTime(e.v)+'</b></div>'
+  ).join('');
+}
+
+/* ============================================================
+   18) НАСТРОЙКИ: ЯЗЫК / ТЕМЫ
+============================================================ */
+const THEMES = [
+  {id:'dark',  c:['#0f1220','#3a5bd9','#4fc3f7'], free:true},
+  {id:'light', c:['#eef1f8','#3a5bd9','#7c4dff'], free:true},
+  {id:'ocean', c:['#04202f','#00b4d8','#48cae4'], free:true},
+  {id:'forest',c:['#0d1f17','#3f9d4a','#a4d65e'], free:true},
+  {id:'candy', c:['#26113a','#ff4d94','#ffd166'], price:300},
+  {id:'sunset',c:['#2b1224','#ff7b54','#ffd166'], price:400, key:'theme_sunset'},
+  {id:'mono',  c:['#111111','#9aa0a6','#c9ccd1'], price:400, key:'theme_mono'}
+];
+const THEME_KEY = 'puzzles2_themes';
+let ownedThemes = ['dark','light','ocean','forest'];
+function loadThemes(){
+  try{
+    const raw = localStorage.getItem(THEME_KEY);
+    if(raw) ownedThemes = JSON.parse(raw);
+  }catch(e){}
+}
+function saveThemes(){ try{ localStorage.setItem(THEME_KEY, JSON.stringify(ownedThemes)); }catch(e){} }
+
+function renderThemes(){
+  const grid = document.getElementById('themeGrid');
+  grid.innerHTML = '';
+  THEMES.forEach(th=>{
+    const owned = th.free || ownedThemes.indexOf(th.id) >= 0;
+    const card = document.createElement('div');
+    card.className = 'theme-card' + (S.theme===th.id?' selected':'') + (owned?'':' locked');
+    card.innerHTML =
+      '<div class="theme-swatch"><i style="background:'+th.c[0]+'"></i>'+
+      '<i style="background:'+th.c[1]+'"></i><i style="background:'+th.c[2]+'"></i></div>'+
+      t('theme_'+th.id);
+    card.addEventListener('click', ()=>{
+      if(!owned){
+        if(th.price && S.coins >= th.price){
+          addCoins(-th.price);
+          ownedThemes.push(th.id); saveThemes();
+          S.theme = th.id; applyTheme(); renderThemes();
+          toast(t('saved'));
+        }else{
+          toast(t('notEnough'));
+        }
+        return;
+      }
+      Sound.click();
+      S.theme = th.id; applyTheme(); saveState(); renderThemes();
+    });
+    grid.appendChild(card);
+  });
+}
+function applyTheme(){
+  document.documentElement.setAttribute('data-theme', S.theme);
+}
+
+document.querySelectorAll('[data-lang]').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    LANG = b.getAttribute('data-lang');
+    S.lang = LANG;
+    applyI18n();
+    document.querySelectorAll('[data-lang]').forEach(x=>{
+      x.classList.toggle('selected', x.getAttribute('data-lang')===LANG);
+    });
+    renderModes(); renderLevels(); renderShop(); renderAch(); renderThemes(); renderStats();
+    saveState();
+  });
+});
+
+/* ============================================================
+   19) СБРОС
+============================================================ */
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  if(!confirm(t('resetConfirm'))) return;
+  S = defState();
+  localLB = {};
+  ownedThemes = ['dark','light','ocean','forest'];
+  saveThemes(); saveLB(); saveState();
+  applyTheme(); setCoins(S.coins);
+  renderModes(); renderLevels(); renderShop(); renderAch(); renderThemes(); renderStats();
+  toast(t('saved'));
+});
+
+/* ============================================================
+   20) YANDEX SDK + ЗАГРУЗКА
+============================================================ */
+let ysdk = null;
+let player = null;
+let lbReady = false;
+
+function initSDK(){
+  return new Promise(resolve=>{
+    if(typeof YaGames === 'undefined'){ resolve(false); return; }
+    YaGames.init().then(sdk=>{
+      ysdk = sdk;
+      try{ sdk.features.LoadingAPI.ready(); }catch(e){}
+      try{
+        sdk.getPlayer({scopes:false}).then(p=>{ player = p; resolve(true); }).catch(()=>resolve(true));
+      }catch(e){ resolve(true); }
+    }).catch(()=>resolve(false));
+  });
+}
+function onGameStart(){
+  if(ysdk){
+    try{ ysdk.features.GameplayAPI.start(); }catch(e){}
+  }
+}
+function onGameStop(){
+  if(ysdk){
+    try{ ysdk.features.GameplayAPI.stop(); }catch(e){}
+  }
+}
+function watchRewarded(cb){
+  if(ysdk && ysdk.adv && ysdk.adv.showRewardedVideo){
+    let rewarded = false;
+    ysdk.adv.showRewardedVideo({
+      callbacks:{
+        onRewarded: ()=>{ rewarded = true; },
+        onClose: ()=>{ if(rewarded) cb(); else toast(t('claim')); },
+        onError: ()=>{ cb(); }
+      }
+    });
+  }else{
+    setTimeout(cb, 600);
+  }
+}
+function pushCloudSave(){
+  if(player && player.setData){
+    try{ player.setData({state:S}, false); }catch(e){}
+  }
+}
+function pullCloudSave(){
+  if(player && player.getData){
+    return player.getData(['state']).then(d=>{
+      if(d && d.state) S = Object.assign(defState(), d.state);
+    }).catch(()=>{});
+  }
+  return Promise.resolve();
+}
+
+/* ============================================================
+   21) BOOT
+============================================================ */
+function boot(){
+  loadState();
+  loadThemes();
+  loadLB();
+  checkDailyReset();
+  LANG = S.lang || 'ru';
+  applyTheme();
+  applyI18n();
+  setCoins(S.coins);
+
+  document.querySelectorAll('[data-lang]').forEach(x=>{
+    x.classList.toggle('selected', x.getAttribute('data-lang')===LANG);
+  });
+
+  renderModes();
+  renderLevels();
+  renderShop();
+  renderAch();
+  renderThemes();
+  renderStats();
+
+  boardEl = document.getElementById('board');
+  boardWrapEl = document.getElementById('boardWrap');
+
+  window.addEventListener('resize', ()=>{
+    if(document.getElementById('screen-game').classList.contains('active') && G.order.length){
+      repaintAll();
+    }
+  });
+
+  setTimeout(()=>{ show('menu'); }, 3500);
+
+  initSDK().then(pulled=>{
+    if(pulled) pullCloudSave().then(()=>{
+      setCoins(S.coins);
+      renderLevels(); renderShop(); renderAch(); renderThemes();
+    });
+  });
+}
+boot();
+</script>
+</body>
+</html>
